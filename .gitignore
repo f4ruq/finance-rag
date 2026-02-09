@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+
+# Mac OS
+.DS_Store
+
+# Data Directory
+data/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Editors
+*.swp
+*~
+
+# Logs
+*.log
+
+# Personal Notes
+notes.txt
