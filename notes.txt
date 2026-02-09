@@ -1,9 +1,0 @@
-sources:
-- EDGAR
-- FRED
-    FEDFUNDS: Federal Fon Oranı (Politika Faizi)
-    CPIAUCSL: Tüketici Fiyat Endeksi (Enflasyon)
-    UNRATE: İşsizlik Oranı
-    DGS10: 10 Yıllık ABD Hazine Tahvili Faizi
-    DGS2: 2 Yıllık ABD Hazine Tahvili Faizi
-- GDELT
