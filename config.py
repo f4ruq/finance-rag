@@ -23,6 +23,6 @@ SERIES_LIST = [
 START_DATE = "2020-01-01"
 
 # Paths
-DATA_DIR = "data/fred"
+DATA_DIR = "data"
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 SUMMARY_DIR = os.path.join(DATA_DIR, "summary")
