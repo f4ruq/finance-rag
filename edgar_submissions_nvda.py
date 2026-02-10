@@ -2,16 +2,12 @@ import os
 import json
 import requests
 from datetime import datetime, timezone
-from dotenv import load_dotenv
+import config
 
-load_dotenv()
+SEC_USER_AGENT = config.USER_AGENT
 
-SEC_USER_AGENT = os.getenv("SEC_USER_AGENT")
-if not SEC_USER_AGENT:
-    raise ValueError("SEC_USER_AGENT not found in .env file")
-
-CIK = "0001045810"          # NVDA (10-digit)
-CIK_NO_ZERO = "1045810"     # same CIK but without leading zeros
+CIK = config.EDGAR_CIK          # NVDA (10-digit)
+CIK_NO_ZERO = config.EDGAR_CIK_NO_ZERO     # same CIK but without leading zeros
 
 SUBMISSIONS_URL = f"https://data.sec.gov/submissions/CIK{CIK}.json"
 
@@ -21,7 +17,7 @@ HEADERS = {
     "Host": "data.sec.gov"
 }
 
-DATA_DIR = "data/edgar"
+DATA_DIR = config.EDGAR_DATA_DIR
 os.makedirs(DATA_DIR, exist_ok=True)
 
 STAMP = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -38,7 +34,7 @@ def build_filing_base_url(accession_number: str) -> str:
 
 
 def main():
-    TARGET_FORMS = {"10-K", "10-Q", "8-K"}
+    TARGET_FORMS = config.EDGAR_FORMS
 
     print(f"Filtering for forms: {TARGET_FORMS}\n")
     print(f"Requesting: {SUBMISSIONS_URL}\n")
@@ -103,10 +99,14 @@ def main():
         print(f"   txt:   {item['full_text_url']}")
         print()
 
+    # Determine output filename
+    # If called from pipeline, we might want a fixed name or pass it as arg.
+    # For now, keep the timestamped behavior but maybe we should standarize.
+    
     out_path = os.path.join(DATA_DIR, f"nvda_submissions_{STAMP}.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump({
-            "ticker": "NVDA",
+            "ticker": config.EDGAR_TICKER,
             "cik": CIK,
             "fetched_at_utc": STAMP,
             "count": len(results),

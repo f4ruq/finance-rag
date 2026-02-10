@@ -2,20 +2,16 @@ import os
 import time
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+import config
 
-load_dotenv()
-
-SEC_USER_AGENT = os.getenv("SEC_USER_AGENT")
-if not SEC_USER_AGENT:
-    raise ValueError("SEC_USER_AGENT not found in .env file")
+SEC_USER_AGENT = config.USER_AGENT
 
 HEADERS = {
     "User-Agent": SEC_USER_AGENT,
     "Accept-Encoding": "gzip, deflate",
 }
 
-RAW_DIR = "data/edgar/raw"
+RAW_DIR = config.EDGAR_RAW_DIR
 
 
 def download_file(url: str, out_path: str):

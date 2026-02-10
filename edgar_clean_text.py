@@ -1,8 +1,9 @@
 import os
 from bs4 import BeautifulSoup
+import config
 
-RAW_DIR = "data/edgar/raw"
-CLEAN_DIR = "data/edgar/clean"
+RAW_DIR = config.EDGAR_RAW_DIR
+CLEAN_DIR = config.EDGAR_CLEAN_DIR
 
 os.makedirs(CLEAN_DIR, exist_ok=True)
 

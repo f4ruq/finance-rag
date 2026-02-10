@@ -1,16 +1,27 @@
 import os
+import logging
 import requests
 import json
 from datetime import datetime, timezone, timedelta
 import urllib.parse
 from collections import Counter
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import config
 
-BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
-QUERY = "(title:NVDA OR title:NVIDIA) sourcelang:english"
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+BASE_URL = config.GDELT_BASE_URL
+QUERY = config.GDELT_QUERY
 MODE = "ArtList"
 FORMAT = "json"
 MAX_RECORDS = 50
-DATA_DIR = "data/gdelt"
+DATA_DIR = config.GDELT_DATA_DIR
 
 # Ensure output directory exists
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -19,27 +30,34 @@ os.makedirs(DATA_DIR, exist_ok=True)
 START_DATETIME = (datetime.now(timezone.utc).replace(microsecond=0)).strftime("%Y%m%d%H%M%S")
 
 # Manually construct URL to control encoding
-QUERY_STRING = "(NVDA OR NVIDIA) sourcelang:english"
+# We used to hardcode "(NVDA OR NVIDIA) sourcelang:english", now we use config
+# But config.GDELT_QUERY is the full string. We expect the user to have put the right query in config.
+QUERY_STRING = config.GDELT_QUERY
 encoded_query = urllib.parse.quote(QUERY_STRING)
 
 url = f"{BASE_URL}?query={encoded_query}&mode={MODE}&format={FORMAT}&maxrecords={MAX_RECORDS}&sort=datedesc"
 
-print(f"Requesting URL: {url}\n")
-r = requests.get(url)
+logger.info(f"Requesting URL: {url}")
+
+# Setup Retry logic
+session = requests.Session()
+retries = Retry(total=5, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])
+session.mount('https://', HTTPAdapter(max_retries=retries))
 
 try:
+    r = session.get(url, timeout=10)
     r.raise_for_status()
     data = r.json()
 except Exception as e:
-    print(f"Error: {e}")
+    logger.error(f"Failed to fetch GDELT data: {e}")
     try:
-        print(f"Response Text: {r.text[:500]}")
+        logger.error(f"Response Text: {r.text[:500]}")
     except:
         pass
     exit(1)
 
 articles = data.get("articles", [])
-print(f"Total articles fetched (raw): {len(articles)}")
+logger.info(f"Total articles fetched (raw): {len(articles)}")
 
 # Client-side filtering for Title
 filtered_articles = [
@@ -47,7 +65,7 @@ filtered_articles = [
     if a.get("title") and ("NVDA" in a["title"].upper() or "NVIDIA" in a["title"].upper())
 ]
 
-print(f"Total articles after title filtering: {len(filtered_articles)}")
+logger.info(f"Total articles after title filtering: {len(filtered_articles)}")
 
 # --- Cleaning & Deduplication ---
 
@@ -90,7 +108,7 @@ for a in filtered_articles:
     a["url"] = clean_url
     clean_articles.append(a)
 
-print(f"Total articles after deduplication: {len(clean_articles)}\n")
+logger.info(f"Total articles after deduplication: {len(clean_articles)}")
 
 # --- Statistics ---
 
@@ -133,7 +151,7 @@ out_file = os.path.join(DATA_DIR, f"gdelt_nvda_clean_{START_DATETIME}.json")
 with open(out_file, "w", encoding="utf-8") as f:
     json.dump(output_data, f, ensure_ascii=False, indent=2)
 
-print(f"Saved clean response to: {out_file}")
-print("Stats:")
-print(f" - Unique Domains: {unique_domain_count}")
-print(f" - Top Domains: {top_5_domains}")
+logger.info(f"Saved clean response to: {out_file}")
+logger.info("Stats:")
+logger.info(f" - Unique Domains: {unique_domain_count}")
+logger.info(f" - Top Domains: {top_5_domains}")

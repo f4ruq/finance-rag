@@ -5,9 +5,9 @@ import config
 class FredClient:
     def __init__(self, api_key: str = config.FRED_API_KEY):
         self.api_key = api_key
-        self.base_url = config.BASE_URL
+        self.base_url = config.FRED_BASE_URL
 
-    def fetch_series(self, series_id: str, start_date: str = config.START_DATE) -> pd.DataFrame:
+    def fetch_series(self, series_id: str, start_date: str = config.FRED_START_DATE) -> pd.DataFrame:
         """
         Fetches a specific series from FRED API and returns a DataFrame.
         """

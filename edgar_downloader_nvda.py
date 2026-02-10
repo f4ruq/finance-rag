@@ -2,24 +2,22 @@ import os
 import json
 import time
 import requests
+import sys
 from datetime import datetime, timezone
-from dotenv import load_dotenv
+import config
 
-load_dotenv()
-
-SEC_USER_AGENT = os.getenv("SEC_USER_AGENT")
-if not SEC_USER_AGENT:
-    raise ValueError("SEC_USER_AGENT not found in .env file")
+SEC_USER_AGENT = config.USER_AGENT
 
 HEADERS = {
     "User-Agent": SEC_USER_AGENT,
     "Accept-Encoding": "gzip, deflate",
+    "Host": "www.sec.gov"
 }
 
-INPUT_JSON = "data/edgar/nvda_submissions_20260209_205126.json"  # change if needed
-OUTPUT_DIR = "data/edgar/raw"
+OUTPUT_DIR = config.EDGAR_RAW_DIR
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 
 def safe_filename(name: str) -> str:
@@ -34,8 +32,18 @@ def download_file(url: str, out_path: str):
         f.write(r.content)
 
 
-def main():
-    with open(INPUT_JSON, "r", encoding="utf-8") as f:
+def main(input_file=None):
+    if not input_file:
+        # Find the latest submissions file in EDGAR_DATA_DIR
+        files = [f for f in os.listdir(config.EDGAR_DATA_DIR) if f.startswith(f"{config.EDGAR_TICKER.lower()}_submissions_") and f.endswith(".json")]
+        if not files:
+             print("No submission file found.")
+             return
+        files.sort(reverse=True)
+        input_file = os.path.join(config.EDGAR_DATA_DIR, files[0])
+        print(f"Using latest submission file: {input_file}")
+
+    with open(input_file, "r", encoding="utf-8") as f:
         payload = json.load(f)
 
     filings = payload.get("filings", [])

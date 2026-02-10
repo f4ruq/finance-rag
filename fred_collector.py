@@ -76,7 +76,7 @@ class FredCollector:
         dataframes = {}
         summaries = []
 
-        for sid in config.SERIES_LIST:
+        for sid in config.FRED_SERIES_LIST:
             df = self.client.fetch_series(sid)
             if df.empty:
                 print(f"Skipping {sid} due to empty data.")
@@ -110,8 +110,8 @@ class FredCollector:
         report = {
             "source": "FRED",
             "fetched_at_utc": self.stamp,
-            "start_date": config.START_DATE,
-            "series_included": config.SERIES_LIST,
+            "start_date": config.FRED_START_DATE,
+            "series_included": config.FRED_SERIES_LIST,
             "summaries_last_12": summaries,
             "yield_curve": yield_curve_info
         }
