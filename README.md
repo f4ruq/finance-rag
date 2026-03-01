@@ -9,7 +9,7 @@ This project is a data collection and processing pipeline for a financial RAG sy
 
 ### Features
 
-The project collects data from three main sources:
+The project collects data from four main sources:
 
 1.  **FRED - Federal Reserve Economic Data (Macroeconomic Indicators)**:
     *   Fetches US macroeconomic data (Fed Funds Rate, CPI, Unemployment, Treasury Yields).
@@ -23,7 +23,12 @@ The project collects data from three main sources:
     *   Scans recent news containing keywords "NVDA" or "NVIDIA".
     *   Filters English content and stores it in JSON format.
 
-3.  **SEC EDGAR - Electronic Data Gathering, Analysis, and Retrieval (Company Filings)**:
+3.  **YFinance - Yahoo Finance (Analyst Insights & News Scraping)**:
+    *   Fetches Wall Street analyst recommendations (Buy/Hold/Sell) and price targets.
+    *   Collects company financial metrics and recent rating upgrades/downgrades.
+    *   Scrapes full text from recent Yahoo Finance news articles for deeper RAG context.
+
+4.  **SEC EDGAR - Electronic Data Gathering, Analysis, and Retrieval (Company Filings)**:
     *   Tracks official filings (10-K, 10-Q, 8-K) submitted by NVIDIA to the SEC.
     *   Downloads filings, converts HTML content to text, and cleans it.
     *   Creates clean text files optimized for RAG.
@@ -56,6 +61,7 @@ To run a specific source:
 python pipeline.py --source fred
 python pipeline.py --source gdelt
 python pipeline.py --source edgar
+python pipeline.py --source yfinance
 ```
 
 ### Project Structure
@@ -64,6 +70,7 @@ python pipeline.py --source edgar
 *   `config.py`: Configuration, API keys, and file paths.
 *   `fred_collector.py`: Fetches macro data from FRED.
 *   `gdelt.py`: Fetches news from GDELT.
+*   `yfinance_collector.py`: Fetches analyst insights and scrapes news from Yahoo Finance.
 *   `edgar_*.py`: Scripts for downloading and processing SEC filings.
 *   `data/`: Directory where downloaded and processed data is stored.
 
@@ -76,7 +83,7 @@ Bu proje, örnek olarak NVIDIA (NVDA) odaklı bir finansal RAG sistemi için ver
 
 ### Özellikler
 
-Proje üç ana kaynaktan veri toplar:
+Proje dört ana kaynaktan veri toplar:
 
 1.  **FRED - Federal Reserve Economic Data (Makroekonomik Göstergeler)**:
     *   ABD makroekonomik verilerini (Fed Faizi, TÜFE, İşsizlik, Tahvil Faizleri) çeker.
@@ -90,7 +97,12 @@ Proje üç ana kaynaktan veri toplar:
     *   "NVDA" veya "NVIDIA" anahtar kelimelerini içeren son haberleri tarar.
     *   İngilizce içeriği filtreler ve JSON formatında saklar.
 
-3.  **SEC EDGAR - Electronic Data Gathering, Analysis, and Retrieval (Resmi Şirket Dosyaları)**:
+3.  **YFinance - Yahoo Finance (Analist Görüşleri ve Haber Kazıma)**:
+    *   Wall Street analistlerinin tavsiyelerini (Al/Tut/Sat) ve hedef fiyatlarını çeker.
+    *   Şirketin finansal oranlarını ve son not artırımı/indirimi güncellemelerini alır.
+    *   RAG sisteminin derin bağlam yeteneği için Yahoo Finance üzerindeki son haberlerin tam metnini kazıyıp kaydeder (Web Scraping).
+
+4.  **SEC EDGAR - Electronic Data Gathering, Analysis, and Retrieval (Resmi Şirket Dosyaları)**:
     *   NVIDIA'nın SEC'e sunduğu resmi dosyaları (10-K, 10-Q, 8-K) takip eder.
     *   Dosyaları indirir, HTML içeriğini metne çevirir ve temizler.
     *   RAG için optimize edilmiş temiz metin dosyaları oluşturur.
@@ -123,6 +135,7 @@ Belirli bir kaynağı çalıştırmak için:
 python pipeline.py --source fred
 python pipeline.py --source gdelt
 python pipeline.py --source edgar
+python pipeline.py --source yfinance
 ```
 
 ### Proje Yapısı
@@ -131,5 +144,6 @@ python pipeline.py --source edgar
 *   `config.py`: Ayarlar, API anahtarları ve dosya yolları.
 *   `fred_collector.py`: FRED'den makro verileri çeker.
 *   `gdelt.py`: GDELT'ten haberleri çeker.
+*   `yfinance_collector.py`: YFinance'den analist tavsiyelerini çeker ve güncel haberleri kazır.
 *   `edgar_*.py`: SEC dosyalarını indirme ve işleme scriptleri.
 *   `data/`: İndirilen ve işlenen verilerin saklandığı klasör.

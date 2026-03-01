@@ -80,9 +80,13 @@ def run_edgar():
     # 4. Clean Text
     run_script("edgar_clean_text.py")
 
+def run_yfinance():
+    logger.info("Starting YFinance collection...")
+    run_script("yfinance_collector.py")
+
 def main():
     parser = argparse.ArgumentParser(description="Finance RAG Data Pipeline")
-    parser.add_argument("--source", type=str, choices=["all", "fred", "gdelt", "edgar"], default="all", help="Data source to run")
+    parser.add_argument("--source", type=str, choices=["all", "fred", "gdelt", "edgar", "yfinance"], default="all", help="Data source to run")
     parser.add_argument("--clean", action="store_true", help="Clean data directories before running (default: True based on requirements)")
     
     # User requested: "her zaman data klasörlerinde en güncel veri olsun. eskilerin kalmasına gerek yok."
@@ -106,6 +110,9 @@ def main():
         dirs_to_clean.append(config.EDGAR_RAW_DIR)  # Raw filings
         dirs_to_clean.append(config.EDGAR_CLEAN_DIR) # Clean txt
 
+    if args.source in ["all", "yfinance"]:
+        dirs_to_clean.append(config.YFINANCE_DATA_DIR)
+
     # Execute cleaning
     # The user request is strong: "delete old data". So we do it.
     logger.info("Performing data cleanup...")
@@ -122,6 +129,9 @@ def main():
             
         if args.source in ["all", "edgar"]:
             run_edgar()
+            
+        if args.source in ["all", "yfinance"]:
+            run_yfinance()
             
         logger.info("Pipeline execution completed successfully.")
         

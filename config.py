@@ -42,3 +42,7 @@ GDELT_BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 GDELT_QUERY = "(NVDA OR NVIDIA) sourcelang:english"
 GDELT_DATA_DIR = os.path.join(DATA_DIR, "gdelt")
 
+# --- YFinance Configuration ---
+YFINANCE_TICKER = "NVDA"
+YFINANCE_DATA_DIR = os.path.join(DATA_DIR, "yfinance")
+
