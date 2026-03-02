@@ -54,7 +54,8 @@ except Exception as e:
         logger.error(f"Response Text: {r.text[:500]}")
     except:
         pass
-    exit(1)
+    logger.warning("GDELT API is currently down or unreachable. Exiting gracefully so the rest of the pipeline can continue.")
+    exit(0)
 
 articles = data.get("articles", [])
 logger.info(f"Total articles fetched (raw): {len(articles)}")

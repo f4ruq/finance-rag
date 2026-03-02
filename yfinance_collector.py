@@ -97,9 +97,9 @@ def run():
     detailed_news = []
     
     for article in news:
-        content = article.get("content", {})
-        provider = content.get("provider", {})
-        click_url = content.get("clickThroughUrl", {})
+        content = article.get("content") or {}
+        provider = content.get("provider") or {}
+        click_url = content.get("clickThroughUrl") or {}
         
         # Use pubDate or fallback
         pub_time = content.get("pubDate", "")
