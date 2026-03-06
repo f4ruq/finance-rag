@@ -1,9 +1,30 @@
 import os
 import json
 import logging
+import shutil
+import tempfile
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+
+# ── SSL FIX ──────────────────────────────────────────────────────────────────
+# Windows'ta kullanıcı adında Türkçe/özel karakter varsa curl_cffi'nin
+# kullandığı certifi CA dosyası yolu doğru okunamıyor (curl error 77).
+# Çözüm: CA dosyasını ASCII-safe bir geçici konuma kopyalayıp env var ile
+# göstermek.
+try:
+    import certifi
+    _orig_ca = certifi.where()
+    # Geçici dosyayı ASCII karakterlerden oluşan temp dizinine kopyala
+    _tmp_ca = os.path.join(tempfile.gettempdir(), "cacert_yf.pem")
+    if not os.path.exists(_tmp_ca):
+        shutil.copy2(_orig_ca, _tmp_ca)
+    os.environ.setdefault("SSL_CERT_FILE", _tmp_ca)
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", _tmp_ca)
+except Exception:
+    pass  # certifi yoksa yfinance kendi yönetir
+# ─────────────────────────────────────────────────────────────────────────────
+
 import yfinance as yf
 import config
 
