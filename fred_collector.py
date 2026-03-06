@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 import pandas as pd
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -8,18 +9,27 @@ import config
 from fred_client import FredClient
 
 class FredCollector:
-    def __init__(self):
+    def __init__(self, use_blob: bool = False):
         self.client = FredClient()
         self.stamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        self._ensure_dirs()
+        self.use_blob = use_blob
+        if not use_blob:
+            self._ensure_dirs()
 
     def _ensure_dirs(self):
         os.makedirs(config.RAW_DIR, exist_ok=True)
         os.makedirs(config.SUMMARY_DIR, exist_ok=True)
 
-    def save_json(self, path: str, payload: dict):
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
+    def save_json(self, path_or_blob: str, payload: dict, blob_container: Optional[str] = None):
+        """Yerel diske veya Blob Storage'a JSON kaydeder."""
+        if self.use_blob:
+            import sys, os as _os
+            sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "azure"))
+            from blob_helper import upload_json
+            upload_json(blob_container, path_or_blob, payload)
+        else:
+            with open(path_or_blob, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
 
     def summarize_last_12(self, df: pd.DataFrame, series_id: str) -> Dict:
         if df.empty:
@@ -73,6 +83,7 @@ class FredCollector:
 
     def run(self):
         print("Fetching FRED series...\n")
+        from config_cloud import CONTAINER_RAW, CONTAINER_CLEAN, BLOB_PATHS  # noqa (cloud only)
         dataframes = {}
         summaries = []
 
@@ -95,13 +106,17 @@ class FredCollector:
                 ]
             }
 
-            raw_path = os.path.join(config.RAW_DIR, f"{sid}_{self.stamp}.json")
-            self.save_json(raw_path, raw_payload)
+            filename = f"{sid}_{self.stamp}.json"
+            if self.use_blob:
+                blob_name = BLOB_PATHS["fred_raw"].format(filename=filename)
+                self.save_json(blob_name, raw_payload, blob_container=CONTAINER_RAW)
+            else:
+                raw_path = os.path.join(config.RAW_DIR, filename)
+                self.save_json(raw_path, raw_payload)
 
             summary = self.summarize_last_12(df, sid)
             summaries.append(summary)
-
-            print(f"{sid} -> saved {len(df)} observations to {raw_path}")
+            print(f"{sid} -> saved {len(df)} observations")
 
         # Yield curve calculation
         yield_curve_info = self.calculate_yield_curve(dataframes)
@@ -116,12 +131,22 @@ class FredCollector:
             "yield_curve": yield_curve_info
         }
 
-        report_path = os.path.join(config.SUMMARY_DIR, f"macro_report_{self.stamp}.json")
-        self.save_json(report_path, report)
+        report_filename = f"macro_report_{self.stamp}.json"
+        if self.use_blob:
+            blob_name = BLOB_PATHS["fred_summary"].format(filename=report_filename)
+            self.save_json(blob_name, report, blob_container=CONTAINER_RAW)
+        else:
+            report_path = os.path.join(config.SUMMARY_DIR, report_filename)
+            self.save_json(report_path, report)
+            print("\n--- Saved Macro Report ---")
+            print(report_path)
 
-        print("\n--- Saved Macro Report ---")
-        print(report_path)
+
+def run(use_blob: bool = False):
+    """Pipeline ve Azure Functions tarafından çağrılacak ana fonksiyon."""
+    collector = FredCollector(use_blob=use_blob)
+    collector.run()
+
 
 if __name__ == "__main__":
-    collector = FredCollector()
-    collector.run()
+    run(use_blob=False)

@@ -1,0 +1,22 @@
+# ── Azure Functions Runtime ─────────────────────────────────────────────────
+azure-functions
+
+# ── Azure SDK ───────────────────────────────────────────────────────────────
+azure-storage-blob>=12.0.0
+azure-identity>=1.15.0
+azure-keyvault-secrets>=4.7.0
+azure-search-documents>=11.4.0
+
+# ── LLM / RAG ───────────────────────────────────────────────────────────────
+openai>=1.0.0
+langchain-openai>=0.1.0
+langchain-text-splitters>=0.0.1
+
+# ── Data Collection (collectors'ın cloud'da da çalışması için) ───────────────
+requests>=2.32.0
+beautifulsoup4>=4.12.0
+lxml
+pandas>=2.0.0
+python-dotenv>=1.0.0
+yfinance
+certifi
