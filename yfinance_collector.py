@@ -59,7 +59,7 @@ def scrape_article_text(url):
         logger.warning(f"Failed to scrape article at {url}: {e}")
         return ""
 
-def run():
+def run(use_blob: bool = False):
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
     ticker_symbol = config.YFINANCE_TICKER
@@ -157,23 +157,42 @@ def run():
     }
     
     # Save the insight summary
-    file_path = os.path.join(out_dir, f"{ticker_symbol}_yfinance_insight.json")
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-        
-    logger.info(f"YFinance insight data saved to {file_path}")
-    
-    # Save the detailed scraped news
-    news_file_path = os.path.join(out_dir, f"{ticker_symbol}_yfinance_news.json")
+    insight_filename = f"{ticker_symbol}_yfinance_insight.json"
+    news_filename = f"{ticker_symbol}_yfinance_news.json"
+
     detailed_news_data = {
         "ticker": ticker_symbol,
         "collected_at": datetime.now().isoformat(),
         "articles": detailed_news
     }
-    with open(news_file_path, "w", encoding="utf-8") as f:
-        json.dump(detailed_news_data, f, indent=4, ensure_ascii=False)
+
+    if use_blob:
+        import sys
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "azure"))
+        from blob_helper import upload_json
+        from config_cloud import CONTAINER_RAW, BLOB_PATHS
         
-    logger.info(f"YFinance detailed news saved to {news_file_path}")
+        insight_blob = BLOB_PATHS["yfinance"].format(filename=insight_filename)
+        upload_json(CONTAINER_RAW, insight_blob, data)
+        logger.info(f"YFinance insight blob yüklendi: {CONTAINER_RAW}/{insight_blob}")
+        
+        news_blob = BLOB_PATHS["yfinance"].format(filename=news_filename)
+        upload_json(CONTAINER_RAW, news_blob, detailed_news_data)
+        logger.info(f"YFinance detailed news blob yüklendi: {CONTAINER_RAW}/{news_blob}")
+
+    else:
+        file_path = os.path.join(out_dir, insight_filename)
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+            
+        logger.info(f"YFinance insight data saved to {file_path}")
+        
+        # Save the detailed scraped news
+        news_file_path = os.path.join(out_dir, news_filename)
+        with open(news_file_path, "w", encoding="utf-8") as f:
+            json.dump(detailed_news_data, f, indent=4, ensure_ascii=False)
+            
+        logger.info(f"YFinance detailed news saved to {news_file_path}")
 
 if __name__ == "__main__":
-    run()
+    run(use_blob=False)

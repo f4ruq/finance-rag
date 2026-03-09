@@ -22,6 +22,36 @@ def download_file(url: str, out_path: str):
         f.write(r.content)
 
 
+def find_primary_doc_from_html(html_content: str, target_form: str):
+    """
+    Parses the EDGAR index.html payload directly from string
+    and finds the document whose Type matches target_form.
+    """
+    soup = BeautifulSoup(html_content, "lxml")
+
+    table = soup.find("table", class_="tableFile", summary="Document Format Files")
+    if not table:
+        return None
+
+    rows = table.find_all("tr")
+    for row in rows[1:]:
+        cols = row.find_all("td")
+        if len(cols) < 4:
+            continue
+
+        a_tag = cols[2].find("a")
+        if a_tag:
+            doc_name = a_tag.get_text(strip=True)
+        else:
+            doc_name = cols[2].get_text(strip=True)
+        doc_type = cols[3].get_text(strip=True)
+
+        if doc_type.upper() == target_form.upper():
+            return doc_name
+
+    return None
+
+
 def find_primary_doc(index_html_path: str, target_form: str):
     """
     Parses the EDGAR index.html file and finds the document
@@ -55,7 +85,73 @@ def find_primary_doc(index_html_path: str, target_form: str):
     return None
 
 
-def main():
+def run(use_blob: bool = False):
+    if use_blob:
+        import sys
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "azure"))
+        from blob_helper import list_blobs, download_text, upload_bytes, blob_exists
+        from config_cloud import CONTAINER_RAW, BLOB_PATHS
+        
+        # Blobları listele (klasör gibi davranacak prefix'ler)
+        all_blobs = list_blobs(CONTAINER_RAW, prefix="edgar/raw/")
+        
+        # Benzersiz klasör isimlerini toparla: edgar/raw/{folder}/...
+        folders_set = set()
+        for b in all_blobs:
+            parts = b.split("/")
+            if len(parts) >= 4:
+                folders_set.add(parts[2])
+                
+        folders = sorted(list(folders_set))
+        print(f"Found {len(folders)} filing folders in Blob Storage.\n")
+        
+        for folder in folders:
+            # -index.html dosyasını bul
+            index_blob_name = BLOB_PATHS["edgar_raw"].format(folder=folder, filename=f"{folder.split('_')[-1]}-index.html")
+            part_arr = folder.split('_')
+            if len(part_arr) < 3:
+                continue
+            target_form = part_arr[1]
+            accession_no_dash = part_arr[-1].replace("-", "")
+            cik_no_zero = "1045810"
+            
+            if not blob_exists(CONTAINER_RAW, index_blob_name):
+                print(f"Skipping {folder} (no index blob found)")
+                continue
+                
+            # HTML içeriği indir ve parse et
+            html_content = download_text(CONTAINER_RAW, index_blob_name)
+            primary_doc_name = find_primary_doc_from_html(html_content, target_form)
+            
+            if not primary_doc_name:
+                print(f"[{folder}] No primary doc found for form {target_form}")
+                continue
+                
+            out_blob_name = BLOB_PATHS["edgar_raw"].format(folder=folder, filename=primary_doc_name)
+            if blob_exists(CONTAINER_RAW, out_blob_name):
+                print(f"[{folder}] Already downloaded: {primary_doc_name}")
+                continue
+                
+            base_url = f"https://www.sec.gov/Archives/edgar/data/{cik_no_zero}/{accession_no_dash}/"
+            primary_url = base_url + primary_doc_name
+            
+            print(f"[{folder}] Downloading primary doc: {primary_doc_name}")
+            print(f"URL: {primary_url}")
+            
+            try:
+                r = requests.get(primary_url, headers=HEADERS)
+                r.raise_for_status()
+                upload_bytes(CONTAINER_RAW, out_blob_name, r.content)
+                print(f"Saved -> Blob: {CONTAINER_RAW}/{out_blob_name}\n")
+            except Exception as e:
+                print(f"FAILED: {e}\n")
+                
+            time.sleep(1.2)
+            
+        print("Done.")
+        return
+
+    # LOCAL DISK EXECUTION
     if not os.path.exists(RAW_DIR):
         raise ValueError(f"{RAW_DIR} not found. Run the downloader first.")
 
@@ -94,7 +190,14 @@ def main():
 
         base_url = f"https://www.sec.gov/Archives/edgar/data/{cik_no_zero}/{accession_no_dash}/"
 
-        primary_doc_name = find_primary_doc(index_path, target_form)
+        ##################################################
+        # Changed: using the new injected helper function 
+        # instead of reading the file again inside function
+        with open(index_path, "r", encoding="utf-8", errors="ignore") as f:
+            html_content = f.read()
+            
+        primary_doc_name = find_primary_doc_from_html(html_content, target_form)
+        ##################################################
 
         if not primary_doc_name:
             print(f"[{folder}] No primary doc found for form {target_form}")
@@ -122,4 +225,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run(use_blob=False)

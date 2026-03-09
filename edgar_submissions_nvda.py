@@ -33,7 +33,7 @@ def build_filing_base_url(accession_number: str) -> str:
     return f"https://www.sec.gov/Archives/edgar/data/{CIK_NO_ZERO}/{folder}/"
 
 
-def main():
+def run(use_blob: bool = False):
     TARGET_FORMS = config.EDGAR_FORMS
 
     print(f"Filtering for forms: {TARGET_FORMS}\n")
@@ -99,22 +99,32 @@ def main():
         print(f"   txt:   {item['full_text_url']}")
         print()
 
-    # Determine output filename
-    # If called from pipeline, we might want a fixed name or pass it as arg.
-    # For now, keep the timestamped behavior but maybe we should standarize.
-    
-    out_path = os.path.join(DATA_DIR, f"nvda_submissions_{STAMP}.json")
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "ticker": config.EDGAR_TICKER,
-            "cik": CIK,
-            "fetched_at_utc": STAMP,
-            "count": len(results),
-            "filings": results
-        }, f, ensure_ascii=False, indent=2)
+    out_data = {
+        "ticker": config.EDGAR_TICKER,
+        "cik": CIK,
+        "fetched_at_utc": STAMP,
+        "count": len(results),
+        "filings": results
+    }
 
-    print(f"Saved output to: {out_path}")
+    filename = f"nvda_submissions_{STAMP}.json"
+
+    if use_blob:
+        import sys
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "azure"))
+        from blob_helper import upload_json
+        from config_cloud import CONTAINER_RAW, BLOB_PATHS
+
+        blob_name = BLOB_PATHS["edgar_meta"].format(filename=filename)
+        upload_json(CONTAINER_RAW, blob_name, out_data)
+        print(f"Saved output to Blob: {CONTAINER_RAW}/{blob_name}")
+    else:
+        out_path = os.path.join(DATA_DIR, filename)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(out_data, f, ensure_ascii=False, indent=2)
+
+        print(f"Saved output to: {out_path}")
 
 
 if __name__ == "__main__":
-    main()
+    run(use_blob=False)
