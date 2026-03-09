@@ -52,50 +52,15 @@ def pipeline_function(timer: func.TimerRequest) -> None:
     connection="AzureWebJobsStorage"
 )
 def ingestion_function(blob: func.InputStream) -> None:
-    """Blob'a yeni temiz metin gelince otomatik vektörleştirir."""
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    from langchain_openai import AzureOpenAIEmbeddings
-    from azure.search.documents import SearchClient
-    from azure.core.credentials import AzureKeyCredential
-    from config_cloud import (
-        AZURE_OPENAI_ENDPOINT, EMBEDDING_DEPLOYMENT,
-        SEARCH_SERVICE_ENDPOINT, SEARCH_INDEX_NAME
-    )
-    import uuid
+    """
+    Blob'a yeni temiz metin gelince tetiklenir.
+    NOT: Chunking ve Embedding işlemleri (eski Langchain altyapısı) kaldırılmıştır.
+    Azure AI Foundry + Azure AI Search'ün 'Integrated Vectorization' özelliği kullanıldığı için,
+    bu dosya Azure AI Search tarafından otomatik olarak okunup vektörleştirilecektir.
+    Bu fonksiyon sadece ek loglama veya harici sistemleri tetikleme amacı taşıyabilir.
+    """
+    logging.info(f"Yeni veri sisteme dahil edildi (Native Ingestion tetiklenecek): {blob.name}")
 
-    logging.info(f"Ingestion başladı: {blob.name}")
-
-    raw_text = blob.read().decode("utf-8")
-
-    # 1. Chunk'la
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-    chunks = splitter.split_text(raw_text)
-
-    # 2. Vektörleştir
-    embedder = AzureOpenAIEmbeddings(
-        azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        azure_deployment=EMBEDDING_DEPLOYMENT
-    )
-    vectors = embedder.embed_documents(chunks)
-
-    # 3. Azure AI Search'e yükle
-    search_client = SearchClient(
-        endpoint=SEARCH_SERVICE_ENDPOINT,
-        index_name=SEARCH_INDEX_NAME,
-        credential=AzureKeyCredential(os.environ["SEARCH_API_KEY"])
-    )
-    docs = [
-        {
-            "id":        str(uuid.uuid4()),
-            "source":    blob.name,
-            "date":      blob.name.split("/")[0],
-            "content":   chunk,
-            "embedding": vector
-        }
-        for chunk, vector in zip(chunks, vectors)
-    ]
-    search_client.upload_documents(documents=docs)
-    logging.info(f"Ingestion tamamlandı: {len(docs)} chunk yüklendi.")
 
 
 @app.route(route="query", methods=["POST"])

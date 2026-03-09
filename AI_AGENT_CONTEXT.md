@@ -72,7 +72,9 @@ Bu modül SEC limitlerine takılmamak (rate limiting) için adım adım (4 aşam
     *   `FRED_API_KEY="api_anahtariniz"`
     *   `SEC_USER_AGENT="Ad Soyad email@adresiniz.com"` *(SEC kuralları gereği zorunludur)*
 
-## 5. Gelecekteki Geliştirmeler ve AI Asistanlar İçin Notlar
-*   **LLM Entegrasyonu:** Bu pipeline şu an sadece veri toplamaktadır. İleri ki aşamalarda LLM (örn. Langchain/LlamaIndex) çerçeveleri kurularak metinlerin chunk'lara (parçalara) ayrılması ve vektör veritabanına (Chroma/FAISS) gömülmesi işlemleri eklenecektir.
+## 5. Gelecekteki Geliştirmeler ve AI Asistanlar İçin Notlar (Büyük Kısmı TAMAMLANDI - Azure Geçişi)
+*   **Azure Geçiş Durumu:** Proje kod bazında yerelden "Azure Cloud" ortamına (Azure Functions, Blob Storage vb.) başarıyla geçirilmiştir. Local yazma işlemleri (`use_blob=True` parametresiyle) Azure Blob Storage üzerinde çalışacak şekilde güncellenmiştir.
+*   **LLM Entegrasyonu:** Azure üzerinden OpenAI ve Azure AI Search entegrasyonlarını içeren `ingestion_function` ve `query_function` API'leri `azure/function_app.py` içine yazılmıştır.
+*   **Otomasyon (CI/CD):** Projede GitHub Actions Workflow ile otomatik Azure Deployment süreçleri kurulmuştur.
 *   **Hata Yönetimi (Error Handling):** Scriptlerin her birinde try-except blokları, loglamalar ve Retry mekanizmaları (özellikle gdelt.py içinde) bulunmaktadır. Herhangi bir script düzenlenirken bu sağlamlık (robustness) yapısının bozulmamasına dikkat edilmelidir.
-*   **Subprocess Orkestrasyonu:** Sisteme yeni bir veri kaynağı eklendiğinde `config.py` içerisine path kuralları eklenmeli ve `pipeline.py` içerisindeki `--source` argümanı ve `clean_directory` kuralları güncellenmelidir.
+*   **Subprocess Orkestrasyonu:** Sisteme yeni bir veri kaynağı eklendiğinde `config_cloud.py` (Bulut) veya `config.py` (Yerel) içerisine path kuralları eklenmeli ve ilgili scriptlerin `use_blob=...` mantığı güncellenmelidir. Her gece otomatik çalışma işlemi artık `pipeline.py` yerine Azure Timer Trigger üzerinden yürütülmektedir.

@@ -18,7 +18,7 @@ Bu projeyi %100 bulut tabanlı, kendi kendine çalışan ve kurumsal seviyede bi
 
 ## 📋 2. Adım Adım İş Planı
 
-### Aşama 1: Kodun Buluta Hazırlanması (Refactoring)
+### Aşama 1: Kodun Buluta Hazırlanması (Refactoring) (TAMAMLANDI)
 Şu an kodlar yerel dosya sistemine (`os.makedirs`, `with open(...)`) bağımlı çalışıyor. 
 *   **Adım 1.1:** Projeye `azure-storage-blob` kütüphanesi eklenecek.
 *   **Adım 1.2:** `config.py` içerisindeki dosya yolları ve kaydetme/okuma fonksiyonları, Azure Blob Storage'a yazacak/okuyacak şekilde güncellenecek.
@@ -31,18 +31,18 @@ Bu projeyi %100 bulut tabanlı, kendi kendine çalışan ve kurumsal seviyede bi
 *   **Adım 2.4:** Vektör araması için **Azure AI Search** servisi oluşturulacak ve dizin (index) yapısı tanımlanacak.
 *   **Adım 2.5:** Tüm API anahtarları **Azure Key Vault** içerisine "Secret" olarak eklenecek.
 
-### Aşama 3: Veri Hattı Otomasyonu (Data Pipeline Automation)
+### Aşama 3: Veri Hattı Otomasyonu (Data Pipeline Automation) (TAMAMLANDI)
 *   **Adım 3.1:** Yeni bir **Azure Functions (Python V2)** projesi oluşturulacak.
 *   **Adım 3.2:** Bir **Timer Trigger** (Örn: Hafta içi her gece 03:00'te çalışacak bir CRON expression) tanımlanacak.
 *   **Adım 3.3:** `pipeline.py`'nin yaptığı tüm işler (FRED, GDELT, YFinance ve SEC verilerinin çekilmesi) bu fonksiyon içerisine taşınacak. Çekilen/temizlenen veriler direkt Blob Storage'a yazılacak.
 
-### Aşama 4: RAG - Vektörleştirme Süreci (Ingestion Pipeline)
-Veriler temizlendikten sonra ChromaDB yerine Azure AI Search'e gönderilmelidir.
-*   **Adım 4.1:** **Blob Trigger** türünde ikinci bir Azure Function yazılacak. (Veya ana Timer fonksiyonunun son adımı olarak kurgulanacak).
-*   **Adım 4.2:** Bu fonksiyon; Blob Storage'a yeni eklenen "temiz" metinleri (`edgar_clean_text.py` çıktıları vd.) okuyacak.
-*   **Adım 4.3:** `langchain-openai` kullanılarak metinler Chunk'lara (parçalara) ayrılacak, Azure OpenAI Embeddings ile vektörleştirilecek ve Azure AI Search Index'ine yüklenecek.
+### Aşama 4: RAG - Vektörleştirme Süreci (Ingestion Pipeline) (TAMAMLANDI)
+Veriler temizlendikten sonra Azure AI Search'e gönderilmelidir.
+*   **Adım 4.1:** Langchain ile manuel vektörleştirme yerine **Azure AI Search Integrated Vectorization** özelliği kullanılacaktır.
+*   **Adım 4.2:** Azure AI Search, Blob Storage'a ('clean-data' container'ı) bağlanan bir Indexer çalıştıracak ve yeni dosyaları otomatik olarak okuyacaktır.
+*   **Adım 4.3:** Azure OpenAI Embedding (text-embedding-ada-002) modeline otomatik bağlanılarak veriler Chunk'lara ayrılıp Azure AI Search Index'ine kaydedilecektir. Koda ihtiyaç yoktur.
 
-### Aşama 5: Soru-Cevap Arayüzü veya API (Serving)
+### Aşama 5: Soru-Cevap Arayüzü veya API (Serving) (TAMAMLANDI)
 Vektörleştirilmiş verilerle konuşabilmek için bir uç nokta (Endpoint) oluşturulacak.
 *   **Adım 5.1:** Yeni bir **HTTP Trigger Azure Function** veya **Azure Container Apps** kullanılarak API oluşturulacak (FastAPI veya Flask ile).
 *   **Adım 5.2:** Kullanıcıdan gelen soru bu API'ye iletilecek. API; 
@@ -51,7 +51,7 @@ Vektörleştirilmiş verilerle konuşabilmek için bir uç nokta (Endpoint) olu�
     3. Bulunan dokümanları Azure OpenAI'a (GPT) bağlam olarak verip cevabı üretecek (Generation).
 *   **Adım 5.3 (Opsiyonel):** Streamlit kullanılarak basit bir web arayüzü yazılıp bu API'ye bağlanacak.
 
-### Aşama 6: Sürekli Entegrasyon ve İzleme (CI/CD & Monitoring)
+### Aşama 6: Sürekli Entegrasyon ve İzleme (CI/CD & Monitoring) (TAMAMLANDI - CI/CD Kısmı)
 *   **Adım 6.1:** GitHub Actions kurularak, koda her push yapıldığında Azure Functions projesinin otomatik olarak dağıtılması (deploy) sağlanacak.
 *   **Adım 6.2:** Azure **Application Insights** entegre edilerek; veri çekerken API limitine takılmalar (Özellikle SEC rate limitleri), hatalar ve sorgu süreleri izlenecek.
 

@@ -78,7 +78,7 @@ adım adım teknik bir rehberdir.
 
 ---
 
-## Aşama 1 — Kodun Buluta Hazırlanması (Refactoring)
+## Aşama 1 — Kodun Buluta Hazırlanması (Refactoring) (TAMAMLANDI)
 
 **İlgili Azure Kaynağı:** Henüz yok — sadece kod değişikliği.
 
@@ -101,9 +101,6 @@ azure-identity>=1.0.0
 azure-keyvault-secrets>=4.0.0
 azure-search-documents>=11.4.0
 openai>=1.0.0
-langchain-openai>=0.1.0
-langchain-text-splitters>=0.0.1
-
 # Azure Functions runtime
 azure-functions
 ```
@@ -296,7 +293,7 @@ az keyvault secret set --vault-name kv-finance-rag --name "SEARCH-API-KEY"  --va
 
 ---
 
-## Aşama 3 — Data Pipeline Otomasyonu (Azure Functions / Timer Trigger)
+## Aşama 3 — Data Pipeline Otomasyonu (Azure Functions / Timer Trigger) (TAMAMLANDI)
 
 **İlgili Azure Kaynağı:** Azure Functions (Consumption Plan)
 
@@ -379,7 +376,7 @@ def pipeline_function(timer: func.TimerRequest) -> None:
 
 ---
 
-## Aşama 4 — RAG Vektörleştirme (Blob Trigger / Ingestion)
+## Aşama 4 — RAG Vektörleştirme (Blob Trigger / Ingestion) (TAMAMLANDI)
 
 **İlgili Azure Kaynakları:** Azure Functions (Blob Trigger), Azure OpenAI, Azure AI Search
 
@@ -440,7 +437,7 @@ def ingestion_function(blob: func.InputStream) -> None:
 
 ---
 
-## Aşama 5 — RAG Soru-Cevap API (HTTP Trigger)
+## Aşama 5 — RAG Soru-Cevap API (HTTP Trigger) (TAMAMLANDI)
 
 **İlgili Azure Kaynakları:** Azure Functions (HTTP Trigger), Azure AI Search, Azure OpenAI
 
@@ -514,7 +511,7 @@ def query_function(req: func.HttpRequest) -> func.HttpResponse:
 
 ---
 
-## Aşama 6 — CI/CD ve İzleme
+## Aşama 6 — CI/CD ve İzleme (TAMAMLANDI - CI/CD Kısmı)
 
 **İlgili Azure Kaynakları:** GitHub Actions, Application Insights
 
