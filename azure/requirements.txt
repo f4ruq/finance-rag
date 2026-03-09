@@ -9,6 +9,8 @@ azure-search-documents>=11.4.0
 
 # ── LLM / RAG ───────────────────────────────────────────────────────────────
 openai>=1.0.0
+langchain-openai>=0.1.0
+langchain-text-splitters>=0.0.1
 
 # ── Data Collection (collectors'ın cloud'da da çalışması için) ───────────────
 requests>=2.32.0
