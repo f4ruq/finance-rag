@@ -13,9 +13,9 @@ RAW_DIR = os.path.join(DATA_DIR, "raw")
 SUMMARY_DIR = os.path.join(DATA_DIR, "summary")
 
 # --- FRED Configuration ---
-FRED_API_KEY = os.getenv("FRED_API_KEY")
+FRED_API_KEY = os.getenv("FRED-API-KEY", os.getenv("FRED_API_KEY"))
 if not FRED_API_KEY:
-    raise ValueError("FRED_API_KEY not found in .env file")
+    raise ValueError("FRED_API_KEY (or FRED-API-KEY) not found in .env file")
 
 FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 FRED_SERIES_LIST = [

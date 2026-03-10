@@ -44,7 +44,7 @@ SEARCH_INDEX_NAME            = "finance-rag-idx"
 KEY_VAULT_URL: str = os.environ.get("KEY_VAULT_URL", "")
 
 # ── Collector Ayarları (config.py ile aynı değerler, cloud bağımsız) ──────────
-FRED_API_KEY: str   = os.environ.get("FRED_API_KEY", "")
+FRED_API_KEY: str   = os.environ.get("FRED-API-KEY", os.environ.get("FRED_API_KEY", ""))
 SEC_USER_AGENT: str = os.environ.get("SEC_USER_AGENT", "")
 
 FRED_SERIES_LIST = ["FEDFUNDS", "CPIAUCSL", "UNRATE", "DGS10", "DGS2"]
