@@ -83,7 +83,8 @@ class FredCollector:
 
     def run(self):
         print("Fetching FRED series...\n")
-        from config_cloud import CONTAINER_RAW, CONTAINER_CLEAN, BLOB_PATHS  # noqa (cloud only)
+        if self.use_blob:
+            from config_cloud import CONTAINER_RAW, CONTAINER_CLEAN, BLOB_PATHS  # noqa 
         dataframes = {}
         summaries = []
 
