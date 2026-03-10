@@ -103,3 +103,10 @@ AZURE_RAG_AUTOMATION_PLAN.md
 notes.txt
 data/
 local_settings.json
+@
+
+# Azure Functions
+.python_packages/
+local.settings.json
+
+task.md

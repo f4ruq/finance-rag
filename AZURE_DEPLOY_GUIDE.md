@@ -511,7 +511,7 @@ def query_function(req: func.HttpRequest) -> func.HttpResponse:
 
 ---
 
-## Aşama 6 — CI/CD ve İzleme (TAMAMLANDI - CI/CD Kısmı)
+## Aşama 6 — CI/CD ve İzleme (BEKLEMEDE / TEST EDİLMEDİ)
 
 **İlgili Azure Kaynakları:** GitHub Actions, Application Insights
 

@@ -51,11 +51,11 @@ Vektörleştirilmiş verilerle konuşabilmek için bir uç nokta (Endpoint) olu�
     3. Bulunan dokümanları Azure OpenAI'a (GPT) bağlam olarak verip cevabı üretecek (Generation).
 *   **Adım 5.3 (Opsiyonel):** Streamlit kullanılarak basit bir web arayüzü yazılıp bu API'ye bağlanacak.
 
-### Aşama 6: Sürekli Entegrasyon ve İzleme (CI/CD & Monitoring) (TAMAMLANDI - CI/CD Kısmı)
+### Aşama 6: Sürekli Entegrasyon ve İzleme (CI/CD & Monitoring) (BEKLEMEDE / TEST EDİLMEDİ)
 *   **Adım 6.1:** GitHub Actions kurularak, koda her push yapıldığında Azure Functions projesinin otomatik olarak dağıtılması (deploy) sağlanacak.
 *   **Adım 6.2:** Azure **Application Insights** entegre edilerek; veri çekerken API limitine takılmalar (Özellikle SEC rate limitleri), hatalar ve sorgu süreleri izlenecek.
 
 ---
 
 ## 🚀 Sonraki Adım
-Eğer kabul ederseniz, ilk uygulama adımı olan **Aşama 1: Kodun Buluta Hazırlanması** süreciyle, `config.py` ve yerel dosya yazma fonksiyonlarını Azure Blob Storage'a uyumlu hale getirmeye başlayabiliriz.
+Azure Function App (Compute), Blob Storage ve Key Vault entegrasyonları ile bulut mimarisi çalışır durumdadır. Sonraki aşamalar için kullanıcının onayına istinaden; verilerin Blob Storage'dan Azure AI Search'e indekslenmesi (Import & Vectorize) ve Monitoring ayarlarının yapılması planlanmaktadır. CI/CD süreçleri bilerek bekletilmektedir.

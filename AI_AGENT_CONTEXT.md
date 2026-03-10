@@ -75,6 +75,6 @@ Bu modül SEC limitlerine takılmamak (rate limiting) için adım adım (4 aşam
 ## 5. Gelecekteki Geliştirmeler ve AI Asistanlar İçin Notlar (Büyük Kısmı TAMAMLANDI - Azure Geçişi)
 *   **Azure Geçiş Durumu:** Proje kod bazında yerelden "Azure Cloud" ortamına (Azure Functions, Blob Storage vb.) başarıyla geçirilmiştir. Local yazma işlemleri (`use_blob=True` parametresiyle) Azure Blob Storage üzerinde çalışacak şekilde güncellenmiştir.
 *   **LLM Entegrasyonu:** Azure üzerinden OpenAI ve Azure AI Search entegrasyonlarını içeren `ingestion_function` ve `query_function` API'leri `azure/function_app.py` içine yazılmıştır.
-*   **Otomasyon (CI/CD):** Projede GitHub Actions Workflow ile otomatik Azure Deployment süreçleri kurulmuştur.
+*   **Otomasyon (CI/CD):** Projede GitHub Actions Workflow yaması bulunsa da henüz test edilmemiş ve aktif edilmemiştir (BEKLEMEDE). Şu an dağıtım manuel Azure CLI ile yapılmaktadır.
 *   **Hata Yönetimi (Error Handling):** Scriptlerin her birinde try-except blokları, loglamalar ve Retry mekanizmaları (özellikle gdelt.py içinde) bulunmaktadır. Herhangi bir script düzenlenirken bu sağlamlık (robustness) yapısının bozulmamasına dikkat edilmelidir.
 *   **Subprocess Orkestrasyonu:** Sisteme yeni bir veri kaynağı eklendiğinde `config_cloud.py` (Bulut) veya `config.py` (Yerel) içerisine path kuralları eklenmeli ve ilgili scriptlerin `use_blob=...` mantığı güncellenmelidir. Her gece otomatik çalışma işlemi artık `pipeline.py` yerine Azure Timer Trigger üzerinden yürütülmektedir.
