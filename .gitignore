@@ -96,17 +96,24 @@ venv.bak/
 # OS specific
 .DS_Store
 Thumbs.db
-AI_AGENT_CONTEXT.md
-AZURE_DEPLOY_GUIDE.md
-AZURE_RAG_AUTOMATION_PLAN.md
 
+# Project notes and task files
 notes.txt
-data/
-local_settings.json
-@
+task.md
+*.ini
 
-# Azure Functions
+# Data directories (all collected raw/clean data)
+data/
+
+# Azure Functions runtime files
 .python_packages/
 local.settings.json
+*.azureauth
+.funcignore
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+.azurefunctions/
 
-task.md
+# Python temporary files
+cacert_yf.pem

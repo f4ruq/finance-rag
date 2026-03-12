@@ -98,4 +98,38 @@ def list_blobs(container: str, prefix: str = "") -> list[str]:
 
 def blob_exists(container: str, blob_name: str) -> bool:
     """Blob'un var olup olmadığını kontrol eder. Yerel: os.path.exists() karşılığı."""
-    return _blob_client(container, blob_name).exists()
+    try:
+        _blob_client(container, blob_name).get_blob_properties()
+        return True
+    except Exception:
+        return False
+
+
+# ── Silme Fonksiyonları ───────────────────────────────────────────────────────
+
+def delete_blob(container: str, blob_name: str) -> None:
+    """Tek bir blob'u siler. Yerel: os.remove() karşılığı."""
+    try:
+        _blob_client(container, blob_name).delete_blob()
+        logger.info(f"Blob silindi: {container}/{blob_name}")
+    except Exception as e:
+        logger.warning(f"Blob silinemedi: {container}/{blob_name} - {e}")
+
+
+def delete_blobs_by_prefix(container: str, prefix: str) -> int:
+    """
+    Belirtilen prefix ile başlayan tüm blob'ları siler.
+    Yerel: shutil.rmtree() veya klasör temizleme karşılığı.
+    Returns: Silinen blob sayısı
+    """
+    blobs = list_blobs(container, prefix=prefix)
+    deleted_count = 0
+    for blob_name in blobs:
+        try:
+            _blob_client(container, blob_name).delete_blob()
+            deleted_count += 1
+        except Exception as e:
+            logger.warning(f"Blob silinemedi: {blob_name} - {e}")
+    
+    logger.info(f"{deleted_count} blob silindi ({container}/{prefix})")
+    return deleted_count

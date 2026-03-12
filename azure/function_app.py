@@ -3,9 +3,6 @@ import azure.functions as func
 import logging
 import sys, os
 
-# Proje kökünü path'e ekle
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 app = func.FunctionApp()
 
 @app.timer_trigger(
@@ -17,13 +14,34 @@ def pipeline_function(timer: func.TimerRequest) -> None:
     """Her gece veri çekme pipeline'ını çalıştırır."""
     logging.info("Pipeline Timer Trigger başladı.")
 
-    from fred_collector   import run as run_fred
-    from gdelt            import run as run_gdelt
-    from yfinance_collector import run as run_yfinance
-    from edgar_submissions_nvda      import run as run_edgar_sub
-    from edgar_downloader_nvda       import run as run_edgar_dl
-    from edgar_download_primary_docs import run as run_edgar_primary
-    from edgar_clean_text            import run as run_edgar_clean
+    # Eski verileri temizle
+    try:
+        from blob_helper import delete_blobs_by_prefix
+        
+        logging.info("Eski veriler temizleniyor...")
+        delete_blobs_by_prefix("raw-data", "fred/")
+        delete_blobs_by_prefix("raw-data", "gdelt/")
+        delete_blobs_by_prefix("raw-data", "yfinance/")
+        delete_blobs_by_prefix("raw-data", "edgar/")
+        delete_blobs_by_prefix("clean-data", "fred/")
+        delete_blobs_by_prefix("clean-data", "gdelt/")
+        delete_blobs_by_prefix("clean-data", "yfinance/")
+        delete_blobs_by_prefix("clean-data", "edgar/")
+        logging.info("Eski veriler temizlendi.")
+    except Exception as e:
+        logging.error(f"Veri temizleme hatası: {e}", exc_info=True)
+
+    try:
+        from fred_collector   import run as run_fred
+        from gdelt            import run as run_gdelt
+        from yfinance_collector import run as run_yfinance
+        from edgar_submissions_nvda      import run as run_edgar_sub
+        from edgar_downloader_nvda       import run as run_edgar_dl
+        from edgar_download_primary_docs import run as run_edgar_primary
+        from edgar_clean_text            import run as run_edgar_clean
+    except Exception as e:
+        logging.error(f"Collector modülleri import edilemedi: {e}", exc_info=True)
+        return
 
     steps = [
         ("FRED",           run_fred),
@@ -69,6 +87,9 @@ def query_function(req: func.HttpRequest) -> func.HttpResponse:
     POST /api/query
     Body: { "question": "NVDA'nın son çeyrek geliri ne oldu?" }
     """
+    import os
+    import json
+    import logging
     from openai import AzureOpenAI
     from azure.search.documents import SearchClient
     from azure.search.documents.models import VectorizedQuery
@@ -77,52 +98,64 @@ def query_function(req: func.HttpRequest) -> func.HttpResponse:
         AZURE_OPENAI_ENDPOINT, EMBEDDING_DEPLOYMENT, CHAT_DEPLOYMENT,
         SEARCH_SERVICE_ENDPOINT, SEARCH_INDEX_NAME
     )
-    import json
 
-    question = req.get_json().get("question", "")
-    if not question:
-        return func.HttpResponse("Soru boş olamaz.", status_code=400)
+    try:
+        question = req.get_json().get("question", "")
+        if not question:
+            return func.HttpResponse("Soru boş olamaz.", status_code=400)
 
-    client = AzureOpenAI(azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version="2024-02-01")
+        client = AzureOpenAI(
+            azure_endpoint=AZURE_OPENAI_ENDPOINT, 
+            api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+            api_version="2024-02-01"
+        )
 
-    # 1. Soruyu vektörleştir
-    q_vector = client.embeddings.create(
-        model=EMBEDDING_DEPLOYMENT, input=question
-    ).data[0].embedding
+        # 1. Soruyu vektörleştir
+        q_vector = client.embeddings.create(
+            model=EMBEDDING_DEPLOYMENT, input=question
+        ).data[0].embedding
 
-    # 2. Azure AI Search'te semantik arama (Retrieval)
-    search_client = SearchClient(
-        endpoint=SEARCH_SERVICE_ENDPOINT,
-        index_name=SEARCH_INDEX_NAME,
-        credential=AzureKeyCredential(os.environ["SEARCH_API_KEY"])
-    )
-    results = search_client.search(
-        search_text=question,
-        vector_queries=[VectorizedQuery(vector=q_vector, k_nearest_neighbors=5, fields="embedding")],
-        select=["content", "source", "date"],
-        top=5
-    )
-    context = "\n\n---\n\n".join([r["content"] for r in results])
+        # 2. Azure AI Search'te semantik arama (Retrieval)
+        search_client = SearchClient(
+            endpoint=SEARCH_SERVICE_ENDPOINT,
+            index_name=SEARCH_INDEX_NAME,
+            credential=AzureKeyCredential(os.environ["SEARCH_API_KEY"])
+        )
+        results = search_client.search(
+            search_text=question,
+            vector_queries=[VectorizedQuery(vector=q_vector, k_nearest_neighbors=5, fields="embedding")],
+            select=["content", "source", "date"],
+            top=5
+        )
+        context = "\n\n---\n\n".join([r["content"] for r in results])
 
-    # 3. GPT ile cevap üret (Generation)
-    response = client.chat.completions.create(
-        model=CHAT_DEPLOYMENT,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Sen NVIDIA hissesi (NVDA) üzerine uzmanlaşmış bir finansal analiz asistanısın. "
-                    "Sadece aşağıdaki belgelerden yararlanarak soruları yanıtla. "
-                    "Eğer belgede cevap yoksa bunu belirt.\n\n"
-                    f"BELGELER:\n{context}"
-                )
-            },
-            { "role": "user", "content": question }
-        ]
-    )
-    answer = response.choices[0].message.content
+        # 3. GPT ile cevap üret (Generation)
+        response = client.chat.completions.create(
+            model=CHAT_DEPLOYMENT,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Sen NVIDIA hissesi (NVDA) üzerine uzmanlaşmış bir finansal analiz asistanısın. "
+                        "Sadece aşağıdaki belgelerden yararlanarak soruları yanıtla. "
+                        "Eğer belgede cevap yoksa bunu belirt.\n\n"
+                        f"BELGELER:\n{context}"
+                    )
+                },
+                {"role": "user", "content": question}
+            ]
+        )
+        answer = response.choices[0].message.content
 
-    return func.HttpResponse(
-        json.dumps({"answer": answer, "sources": context[:500]}, ensure_ascii=False),
-        mimetype="application/json"
-    )
+        return func.HttpResponse(
+            json.dumps({"answer": answer, "sources": context[:500]}, ensure_ascii=False),
+            mimetype="application/json"
+        )
+    
+    except Exception as e:
+        logging.error(f"Query function error: {e}", exc_info=True)
+        return func.HttpResponse(
+            json.dumps({"error": str(e)}, ensure_ascii=False),
+            status_code=500,
+            mimetype="application/json"
+        )

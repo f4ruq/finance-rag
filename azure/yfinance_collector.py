@@ -65,7 +65,9 @@ def run(use_blob: bool = False):
     ticker_symbol = config.YFINANCE_TICKER
     out_dir = config.YFINANCE_DATA_DIR
     
-    os.makedirs(out_dir, exist_ok=True)
+    # Create directory only in local mode (not in Azure Functions)
+    if not use_blob:
+        os.makedirs(out_dir, exist_ok=True)
     
     logger.info(f"Fetching data for {ticker_symbol} using yfinance...")
     ticker = yf.Ticker(ticker_symbol)

@@ -72,9 +72,28 @@ Bu modül SEC limitlerine takılmamak (rate limiting) için adım adım (4 aşam
     *   `FRED_API_KEY="api_anahtariniz"`
     *   `SEC_USER_AGENT="Ad Soyad email@adresiniz.com"` *(SEC kuralları gereği zorunludur)*
 
-## 5. Gelecekteki Geliştirmeler ve AI Asistanlar İçin Notlar (Büyük Kısmı TAMAMLANDI - Azure Geçişi)
-*   **Azure Geçiş Durumu:** Proje kod bazında yerelden "Azure Cloud" ortamına (Azure Functions, Blob Storage vb.) başarıyla geçirilmiştir. Local yazma işlemleri (`use_blob=True` parametresiyle) Azure Blob Storage üzerinde çalışacak şekilde güncellenmiştir.
-*   **LLM Entegrasyonu:** Azure üzerinden OpenAI ve Azure AI Search entegrasyonlarını içeren `ingestion_function` ve `query_function` API'leri `azure/function_app.py` içine yazılmıştır.
-*   **Otomasyon (CI/CD):** Projede GitHub Actions Workflow yaması bulunsa da henüz test edilmemiş ve aktif edilmemiştir (BEKLEMEDE). Şu an dağıtım manuel Azure CLI ile yapılmaktadır.
-*   **Hata Yönetimi (Error Handling):** Scriptlerin her birinde try-except blokları, loglamalar ve Retry mekanizmaları (özellikle gdelt.py içinde) bulunmaktadır. Herhangi bir script düzenlenirken bu sağlamlık (robustness) yapısının bozulmamasına dikkat edilmelidir.
-*   **Subprocess Orkestrasyonu:** Sisteme yeni bir veri kaynağı eklendiğinde `config_cloud.py` (Bulut) veya `config.py` (Yerel) içerisine path kuralları eklenmeli ve ilgili scriptlerin `use_blob=...` mantığı güncellenmelidir. Her gece otomatik çalışma işlemi artık `pipeline.py` yerine Azure Timer Trigger üzerinden yürütülmektedir.
+## 5. Azure Bulut Geçişi ve Mevcut Durum
+
+### 5.1. Tamamlanan Bileşenler ✅
+*   **Azure Functions - Veri Toplama:** Timer trigger ile otomatik veri toplama pipeline'ı aktif ve çalışır durumda. Tüm collector scriptleri (`fred_collector.py`, `gdelt.py`, `yfinance_collector.py`, `edgar_*.py`) Azure Functions üzerinde düzenli olarak çalışmaktadır.
+*   **Azure Blob Storage:** Tüm toplanan veriler Azure Blob Storage'a başarıyla yazılıyor. `use_blob=True` parametresi ile dual-mode (yerel/bulut) desteği eklenmiştir.
+*   **Kod Yapısı:** Read-only file system hatası düzeltildi. `os.makedirs()` çağrıları sadece yerel modda (`use_blob=False`) çalışacak şekilde koruma altına alındı.
+*   **Azure Kaynakları:** Resource Group, Storage Account, Key Vault ve gerekli Azure servisleri kurulmuş durumda.
+*   **Deployment:** Manuel deployment Azure Functions Core Tools (`func azure functionapp publish`) ile başarıyla yapılıyor.
+
+### 5.2. Devam Eden / Bekleyen Bileşenler ⏳
+*   **Azure AI Search Entegrasyonu:** AI Search servisi kurulu ancak Blob Storage'a bağlı değil. Indexer ve vectorization pipeline henüz yapılandırılmadı.
+*   **RAG Pipeline:** `ingestion_function` ve `query_function` fonksiyonları `azure/function_app.py` içinde kod olarak mevcut ancak aktif değil (Azure AI Search bağlantısı eksik).
+*   **LLM Entegrasyonu:** Azure OpenAI embedding ve chat completion entegrasyonu kod seviyesinde yazılmış ancak test edilmemiş ve aktif değil.
+
+### 5.3. Sonraki Adımlar
+1. **Azure AI Search Indexer Kurulumu:** Blob Storage → AI Search otomatik data ingestion pipeline'ı kurulmalı
+2. **Vectorization:** Azure OpenAI embedding modeli ile otomatik vektörleştirme aktif edilmeli
+3. **Query API Test:** RAG query endpoint'i test edilip aktif hale getirilmeli
+4. **Monitoring:** Application Insights ile hata izleme ve performans metrikleri eklenmeli
+5. **CI/CD (Opsiyonel):** GitHub Actions ile otomatik deployment kurulabilir
+
+### 5.4. Teknik Notlar
+*   **Hata Yönetimi:** Tüm collector scriptlerinde try-except blokları ve loglama mevcut. Bu yapı korunmalı.
+*   **Yeni Veri Kaynağı Ekleme:** `config_cloud.py` ve `config.py` güncellemesi + `use_blob` mantığı eklenmeli.
+*   **Dual-Mode:** Kod hem yerel (`python pipeline.py`) hem Azure üzerinde (`Azure Functions`) çalışabilir.

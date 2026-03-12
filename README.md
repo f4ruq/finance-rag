@@ -17,7 +17,7 @@ The project collects data from four main sources:
     *   Saves data as raw JSON and summary reports (`summary/macro_report_*.json`).
 
 > [!NOTE]
-> Once this data pipeline is fully stabilized, the RAG integration will also be hosted in this repository.
+> **Azure Data Pipeline:** Data collection pipeline is active on Azure. Data is automatically collected and stored in Blob Storage. RAG integration (Azure AI Search + OpenAI) is in progress.
 
 2.  **GDELT - Global Database of Events, Language, and Tone (Global News)**:
     *   Scans recent news containing keywords "NVDA" or "NVIDIA".
@@ -66,13 +66,30 @@ python pipeline.py --source yfinance
 
 ### Project Structure
 
-*   `pipeline.py`: Main script. Orchestrates the entire process.
-*   `config.py`: Configuration, API keys, and file paths.
+*   `pipeline.py`: Main script for local execution. Orchestrates the entire process.
+*   `config.py`: Configuration, API keys, and file paths (local mode).
+*   `azure/`: Cloud deployment files
+    *   `function_app.py`: Azure Functions (timer trigger for data collection)
+    *   `config_cloud.py`: Cloud-specific configuration (Blob Storage, Key Vault)
+    *   `blob_helper.py`: Azure Blob Storage helper functions
 *   `fred_collector.py`: Fetches macro data from FRED.
 *   `gdelt.py`: Fetches news from GDELT.
 *   `yfinance_collector.py`: Fetches analyst insights and scrapes news from Yahoo Finance.
 *   `edgar_*.py`: Scripts for downloading and processing SEC filings.
-*   `data/`: Directory where downloaded and processed data is stored.
+*   `data/`: Directory where downloaded and processed data is stored (local mode only).
+
+### Current Azure Status
+
+✅ **Active Components:**
+- Data collection pipeline (FRED, GDELT, YFinance, SEC EDGAR)
+- Azure Functions with timer trigger
+- Azure Blob Storage integration
+- Dual-mode support (local + cloud)
+
+⏳ **In Progress:**
+- Azure AI Search indexer setup
+- Azure OpenAI embedding integration
+- RAG query API
 
 ---
 
@@ -91,7 +108,7 @@ Proje dört ana kaynaktan veri toplar:
     *   Verileri ham JSON ve özet rapor (`summary/macro_report_*.json`) olarak kaydeder.
 
 > [!NOTE]
-> Bu veri hattı tam olarak stabil hale getirildikten sonra, RAG entegrasyonu da bu repoya eklenecektir.
+> **Azure Veri Toplama:** Veri pipeline Azure'da aktif. Veriler otomatik olarak toplanıp Blob Storage'a kaydediliyor. RAG entegrasyonu (Azure AI Search + OpenAI) devam ediyor.
 
 2.  **GDELT - Global Database of Events, Language, and Tone (Küresel Haber Veritabanı)**:
     *   "NVDA" veya "NVIDIA" anahtar kelimelerini içeren son haberleri tarar.
@@ -140,10 +157,27 @@ python pipeline.py --source yfinance
 
 ### Proje Yapısı
 
-*   `pipeline.py`: Ana çalışan script. Tüm süreci yönetir.
-*   `config.py`: Ayarlar, API anahtarları ve dosya yolları.
+*   `pipeline.py`: Yerel çalıştırma için ana script. Tüm süreci yönetir.
+*   `config.py`: Ayarlar, API anahtarları ve dosya yolları (yerel mod).
+*   `azure/`: Bulut deployment dosyaları
+    *   `function_app.py`: Azure Functions (veri toplama için timer trigger)
+    *   `config_cloud.py`: Bulut özel yapılandırma (Blob Storage, Key Vault)
+    *   `blob_helper.py`: Azure Blob Storage yardımcı fonksiyonları
 *   `fred_collector.py`: FRED'den makro verileri çeker.
 *   `gdelt.py`: GDELT'ten haberleri çeker.
 *   `yfinance_collector.py`: YFinance'den analist tavsiyelerini çeker ve güncel haberleri kazır.
 *   `edgar_*.py`: SEC dosyalarını indirme ve işleme scriptleri.
-*   `data/`: İndirilen ve işlenen verilerin saklandığı klasör.
+*   `data/`: İndirilen ve işlenen verilerin saklandığı klasör (sadece yerel mod).
+
+### Azure Durumu
+
+✅ **Aktif Bileşenler:**
+- Veri toplama pipeline (FRED, GDELT, YFinance, SEC EDGAR)
+- Azure Functions timer trigger
+- Azure Blob Storage entegrasyonu
+- Dual-mode destek (yerel + bulut)
+
+⏳ **Devam Eden:**
+- Azure AI Search indexer kurulumu
+- Azure OpenAI embedding entegrasyonu
+- RAG query API
