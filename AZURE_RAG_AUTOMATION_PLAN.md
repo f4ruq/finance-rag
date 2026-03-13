@@ -37,19 +37,19 @@ Bu projeyi %100 bulut tabanlı, kendi kendine çalışan ve kurumsal seviyede bi
 *   **Adım 3.3:** ✅ Tüm veri toplama scriptleri Azure Functions'a taşındı. Veriler Blob Storage'a başarıyla yazılıyor.
 *   **Durum:** Veri toplama pipeline'ı tam operasyonel. FRED, GDELT, YFinance ve SEC EDGAR verileri otomatik olarak toplanıp Azure Blob Storage'da saklanıyor.
 
-### Aşama 4: RAG - Vektörleştirme Süreci (Ingestion Pipeline) ⏳ BEKLEMEDE
-Veriler temizlendikten sonra Azure AI Search'e gönderilmelidir.
-*   **Adım 4.1:** ⏳ Azure AI Search Integrated Vectorization kurulumu yapılacak.
-*   **Adım 4.2:** ⏳ Azure AI Search Indexer'ı Blob Storage'a (`clean-data` container) bağlanacak.
-*   **Adım 4.3:** ⏳ Azure OpenAI Embedding modeli (text-embedding-ada-002) ile otomatik vektörleştirme aktif edilecek.
-*   **Mevcut Durum:** AI Search servisi kurulu ancak Blob Storage'a henüz bağlı değil. Indexer yapılandırması bekleniyor.
+### Aşama 4: RAG - Vektörleştirme Süreci (Ingestion Pipeline) ✅ TAMAMLANDI
+Veriler temizlendikten sonra Azure AI Search'e gönderilir.
+*   **Adım 4.1:** ✅ TAMAMLANDI - Azure AI Search Integrated Vectorization kurulumu yapıldı.
+*   **Adım 4.2:** ✅ TAMAMLANDI - Azure AI Search Indexer'ı Blob Storage'a (`clean-data` container) bağlandı.
+*   **Adım 4.3:** ✅ TAMAMLANDI - Azure OpenAI Embedding modeli (text-embedding-ada-002) ile otomatik vektörleştirme aktif.
+*   **Mevcut Durum:** Indexer her 5 dakikada bir Blob Storage'ı tarayıp, yeni dosyaları otomatik olarak chunking yapıp vektörleştirerek index'e yazıyor.
 
-### Aşama 5: Soru-Cevap Arayüzü veya API (Serving) ⏳ BEKLEMEDE
-Vektörleştirilmiş verilerle konuşabilmek için bir uç nokta (Endpoint) oluşturulacak.
-*   **Adım 5.1:** ⚠️ HTTP Trigger Azure Function kodu yazıldı ancak test edilmedi.
-*   **Adım 5.2:** ⏳ RAG pipeline (Retrieval + Generation) Azure AI Search entegrasyonu tamamlandıktan sonra aktif edilecek.
-*   **Adım 5.3 (Opsiyonel):** ⏳ Web arayüzü (Streamlit) eklenebilir.
-*   **Mevcut Durum:** `query_function` kodu mevcut ancak AI Search index olmadığı için çalışamıyor.
+### Aşama 5: Soru-Cevap Arayüzü veya API (Serving) ✅ TAMAMLANDI
+Vektörleştirilmiş verilerle konuşabilmek için HTTP endpoint oluşturuldu.
+*   **Adım 5.1:** ✅ TAMAMLANDI - HTTP Trigger Azure Function kodu yazıldı ve test edildi.
+*   **Adım 5.2:** ✅ TAMAMLANDI - RAG pipeline (Retrieval + Generation) Azure AI Search entegrasyonu ile aktif.
+*   **Adım 5.3 (Opsiyonel):** ⏳ BEKLEMEDE - Web arayüzü (Streamlit) eklenebilir.
+*   **Mevcut Durum:** `query_function` production'da aktif. POST /api/query endpoint'i başarıyla çalışıyor. Test script: `test_production.py`
 
 ### Aşama 6: Sürekli Entegrasyon ve İzleme (CI/CD & Monitoring) (BEKLEMEDE / TEST EDİLMEDİ)
 *   **Adım 6.1:** GitHub Actions kurularak, koda her push yapıldığında Azure Functions projesinin otomatik olarak dağıtılması (deploy) sağlanacak.
@@ -59,26 +59,67 @@ Vektörleştirilmiş verilerle konuşabilmek için bir uç nokta (Endpoint) olu�
 
 ---
 
-## 📊 Proje Durumu Özeti (12 Mart 2026)
+## 📊 Proje Durumu Özeti (13 Mart 2026)
 
-### ✅ Çalışan Bileşenler
-- Veri toplama pipeline (FRED, GDELT, YFinance, SEC EDGAR)
-- Azure Functions timer trigger (otomatik çalışma)
-- Azure Blob Storage entegrasyonu
-- Dual-mode destek (yerel + bulut)
-- Manuel deployment süreci
+### ✅ Production'da Aktif Bileşenler
+- **Veri toplama pipeline** (FRED, GDELT, YFinance, SEC EDGAR) - Timer trigger her gece 03:00 UTC
+- **Azure Blob Storage** - raw-data ve clean-data container'ları aktif
+- **Azure AI Search** - Integrated vectorization aktif, indexer çalışıyor
+- **Azure OpenAI** - text-embedding-ada-002 (embedding) + gpt-4o (chat) deployment'ları aktif
+- **RAG Query API** - HTTP POST /api/query endpoint production'da
+- **Dual-mode destek** - Kod hem yerel (pipeline.py) hem cloud'da (Azure Functions) çalışabiliyor
+- **Test suite** - test_production.py ile doğrulama yapılıyor
 
-### ⏳ Bekleyen Bileşenler
-- Azure AI Search Indexer kurulumu
-- Blob Storage → AI Search data pipeline
-- Azure OpenAI embedding entegrasyonu
-- RAG query endpoint aktivasyonu
-- Application Insights monitoring
-- CI/CD automation (GitHub Actions)
+### ✅ Tamamlanan Tüm Aşamalar
+1. ✅ Aşama 1: Kodun buluta hazırlanması (refactoring)
+2. ✅ Aşama 2: Azure kaynaklarının kurulumu
+3. ✅ Aşama 3: Veri hattı otomasyonu
+4. ✅ Aşama 4: RAG vektörleştirme pipeline
+5. ✅ Aşama 5: Soru-cevap API
 
-### 🚀 Sonraki Öncelikli Adımlar
-1. **Azure AI Search Index Oluşturma:** Doküman şeması ve vector field'ları tanımla
-2. **Indexer Yapılandırma:** Blob Storage data source'u bağla ve schedule ayarla
-3. **Skillset Tanımlama:** Text splitting ve embedding için Azure OpenAI skillset oluştur
-4. **Test:** Sample query ile RAG pipeline'ı test et
-5. **Query API Aktivasyonu:** HTTP endpoint'i production'a al
+### ⏳ İyileştirme Fırsatları (Opsiyonel)
+- **Conversational RAG:** Multi-turn conversation, session management, conversation history
+- **System Prompt Management:** SYSTEM_PROMPT.md'den runtime okuma
+- **Application Insights:** Detaylı monitoring ve alerting
+- **CI/CD Automation:** GitHub Actions ile otomatik deployment
+- **Tool Calling:** Calculator, charting, forecasting yetenekleri
+- **Advanced RAG:** HyDE, re-ranking, query expansion
+
+### 🚀 Sonraki Geliştirme Fazları
+
+**FAZ 1: Conversational RAG (Öncelik: Yüksek)**
+- State storage ekle (Cosmos DB / Redis)
+- Messages array ile multi-turn conversation
+- System prompt externalization
+- Context window management
+- **Tahmini süre:** 1-2 hafta
+
+**FAZ 2: Tool Calling & Agents (Öncelik: Orta)**
+- Financial calculator tool
+- Charting/visualization tool
+- Forecasting tool
+- Web search tool
+- Multi-agent routing
+- **Tahmini süre:** 2-3 hafta
+
+**FAZ 3: Monitoring & CI/CD (Öncelik: Orta)**
+- Application Insights deep dive
+- GitHub Actions workflow
+- A/B testing framework
+- **Tahmini süre:** 1 hafta
+
+**FAZ 4: Advanced RAG (Öncelik: Düşük)**
+- HyDE (Hypothetical Document Embeddings)
+- Cross-encoder re-ranking
+- Query expansion
+- Metadata filtering
+- **Tahmini süre:** 2-3 hafta
+
+---
+
+## 📚 Ek Kaynaklar
+
+**Detaylı mimari analiz:** `CURRENT_ARCHITECTURE_ANALYSIS.md`  
+**Test rehberi:** `PRODUCTION_TEST_GUIDE.md`  
+**System prompt tasarımı:** `SYSTEM_PROMPT.md`  
+**AI asistan bağlamı:** `AI_AGENT_CONTEXT.md`

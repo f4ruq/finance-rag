@@ -17,7 +17,7 @@ The project collects data from four main sources:
     *   Saves data as raw JSON and summary reports (`summary/macro_report_*.json`).
 
 > [!NOTE]
-> **Azure Data Pipeline:** Data collection pipeline is active on Azure. Data is automatically collected and stored in Blob Storage. RAG integration (Azure AI Search + OpenAI) is in progress.
+> **Production Status:** Fully operational RAG system running on Azure. Automated data collection (timer trigger), Azure AI Search vectorization, and GPT-4o query API are all active. Test with `python test_production.py`
 
 2.  **GDELT - Global Database of Events, Language, and Tone (Global News)**:
     *   Scans recent news containing keywords "NVDA" or "NVIDIA".
@@ -78,18 +78,35 @@ python pipeline.py --source yfinance
 *   `edgar_*.py`: Scripts for downloading and processing SEC filings.
 *   `data/`: Directory where downloaded and processed data is stored (local mode only).
 
-### Current Azure Status
+### Production Azure Architecture
 
-✅ **Active Components:**
-- Data collection pipeline (FRED, GDELT, YFinance, SEC EDGAR)
-- Azure Functions with timer trigger
-- Azure Blob Storage integration
-- Dual-mode support (local + cloud)
+** Fully Operational:**
+- **Data Collection:** Automated pipeline (timer trigger every weekday 03:00 UTC)
+  - FRED (macroeconomic indicators)
+  - GDELT (global news)
+  - YFinance (analyst insights + news scraping)
+  - SEC EDGAR (10-K, 10-Q, 8-K filings)
+- **Storage:** Azure Blob Storage (raw-data + clean-data containers)
+- **Vectorization:** Azure AI Search with integrated vectorization
+  - Automatic chunking and embedding (text-embedding-ada-002)
+  - Indexer runs every 5 minutes
+- **RAG Query API:** HTTP POST endpoint (`/api/query`)
+  - Hybrid search (vector + text)
+  - GPT-4o generation
+  - Test script: `test_production.py`
+- **Dual Mode:** Works both locally and on Azure
 
-⏳ **In Progress:**
-- Azure AI Search indexer setup
-- Azure OpenAI embedding integration
-- RAG query API
+**Documentation:**
+- Architecture Analysis: [`CURRENT_ARCHITECTURE_ANALYSIS.md`](CURRENT_ARCHITECTURE_ANALYSIS.md)
+- Deployment Guide: [`AZURE_DEPLOY_GUIDE.md`](AZURE_DEPLOY_GUIDE.md)
+- Test Guide: [`PRODUCTION_TEST_GUIDE.md`](PRODUCTION_TEST_GUIDE.md)
+- System Prompt: [`SYSTEM_PROMPT.md`](SYSTEM_PROMPT.md)
+
+** Next Steps (Optional Enhancements):**
+- Conversational RAG (multi-turn conversation support)
+- Tool calling (calculator, charting, forecasting)
+- CI/CD automation (GitHub Actions)
+- Advanced RAG techniques (HyDE, re-ranking)
 
 ---
 
@@ -108,7 +125,7 @@ Proje dört ana kaynaktan veri toplar:
     *   Verileri ham JSON ve özet rapor (`summary/macro_report_*.json`) olarak kaydeder.
 
 > [!NOTE]
-> **Azure Veri Toplama:** Veri pipeline Azure'da aktif. Veriler otomatik olarak toplanıp Blob Storage'a kaydediliyor. RAG entegrasyonu (Azure AI Search + OpenAI) devam ediyor.
+> **Production Durumu:** Azure üzerinde tam operasyonel RAG sistemi çalışıyor. Otomatik veri toplama (timer trigger), Azure AI Search vektörleştirme ve GPT-4o sorgu API'si aktif. Test için: `python test_production.py`
 
 2.  **GDELT - Global Database of Events, Language, and Tone (Küresel Haber Veritabanı)**:
     *   "NVDA" veya "NVIDIA" anahtar kelimelerini içeren son haberleri tarar.
@@ -169,15 +186,32 @@ python pipeline.py --source yfinance
 *   `edgar_*.py`: SEC dosyalarını indirme ve işleme scriptleri.
 *   `data/`: İndirilen ve işlenen verilerin saklandığı klasör (sadece yerel mod).
 
-### Azure Durumu
+### Production Azure Mimarisi
 
-✅ **Aktif Bileşenler:**
-- Veri toplama pipeline (FRED, GDELT, YFinance, SEC EDGAR)
-- Azure Functions timer trigger
-- Azure Blob Storage entegrasyonu
-- Dual-mode destek (yerel + bulut)
+** Tam Operasyonel:**
+- **Veri Toplama:** Otomatik pipeline (hafta içi her gece 03:00 UTC)
+  - FRED (makroekonomik göstergeler)
+  - GDELT (küresel haberler)
+  - YFinance (analist görüşleri + haber kazıma)
+  - SEC EDGAR (10-K, 10-Q, 8-K dosyaları)
+- **Depolama:** Azure Blob Storage (raw-data + clean-data containers)
+- **Vektörleştirme:** Azure AI Search integrated vectorization
+  - Otomatik chunking ve embedding (text-embedding-ada-002)
+  - Indexer her 5 dakikada çalışıyor
+- **RAG Sorgu API:** HTTP POST endpoint (`/api/query`)
+  - Hybrid search (vektör + metin)
+  - GPT-4o ile cevap üretimi
+  - Test script: `test_production.py`
+- **Dual Mode:** Hem yerel hem Azure'da çalışıyor
 
-⏳ **Devam Eden:**
-- Azure AI Search indexer kurulumu
-- Azure OpenAI embedding entegrasyonu
-- RAG query API
+** Dokümantasyon:**
+- Mimari Analiz: [`CURRENT_ARCHITECTURE_ANALYSIS.md`](CURRENT_ARCHITECTURE_ANALYSIS.md)
+- Deployment Rehberi: [`AZURE_DEPLOY_GUIDE.md`](AZURE_DEPLOY_GUIDE.md)
+- Test Rehberi: [`PRODUCTION_TEST_GUIDE.md`](PRODUCTION_TEST_GUIDE.md)
+- System Prompt: [`SYSTEM_PROMPT.md`](SYSTEM_PROMPT.md)
+
+** Sonraki Adımlar (Opsiyonel İyileştirmeler):**
+- Conversational RAG (multi-turn konuşma desteği)
+- Tool calling (hesaplama, grafik, tahmin)
+- CI/CD otomasyonu (GitHub Actions)
+- Gelişmiş RAG teknikleri (HyDE, re-ranking)

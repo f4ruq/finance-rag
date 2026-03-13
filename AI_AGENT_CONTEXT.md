@@ -81,17 +81,28 @@ Bu modül SEC limitlerine takılmamak (rate limiting) için adım adım (4 aşam
 *   **Azure Kaynakları:** Resource Group, Storage Account, Key Vault ve gerekli Azure servisleri kurulmuş durumda.
 *   **Deployment:** Manuel deployment Azure Functions Core Tools (`func azure functionapp publish`) ile başarıyla yapılıyor.
 
-### 5.2. Devam Eden / Bekleyen Bileşenler ⏳
-*   **Azure AI Search Entegrasyonu:** AI Search servisi kurulu ancak Blob Storage'a bağlı değil. Indexer ve vectorization pipeline henüz yapılandırılmadı.
-*   **RAG Pipeline:** `ingestion_function` ve `query_function` fonksiyonları `azure/function_app.py` içinde kod olarak mevcut ancak aktif değil (Azure AI Search bağlantısı eksik).
-*   **LLM Entegrasyonu:** Azure OpenAI embedding ve chat completion entegrasyonu kod seviyesinde yazılmış ancak test edilmemiş ve aktif değil.
+### 5.2. Production'da Çalışan RAG Sistemi ✅
+*   **Azure AI Search Entegrasyonu:** ✅ TAMAMLANDI - AI Search servisi kurulu ve Blob Storage'a bağlı. Integrated Vectorization aktif.
+*   **RAG Pipeline:** ✅ TAMAMLANDI - `query_function` production'da aktif ve test edildi. HTTP POST /api/query endpoint'i çalışıyor.
+*   **LLM Entegrasyonu:** ✅ TAMAMLANDI - Azure OpenAI embedding (text-embedding-ada-002) ve chat completion (gpt-4o) entegrasyonu aktif.
+*   **Vectorization:** ✅ TAMAMLANDI - Azure AI Search indexer otomatik olarak Blob Storage'ı tarayıp, chunking yapıp, embedding oluşturup index'e yazıyor.
 
-### 5.3. Sonraki Adımlar
-1. **Azure AI Search Indexer Kurulumu:** Blob Storage → AI Search otomatik data ingestion pipeline'ı kurulmalı
-2. **Vectorization:** Azure OpenAI embedding modeli ile otomatik vektörleştirme aktif edilmeli
-3. **Query API Test:** RAG query endpoint'i test edilip aktif hale getirilmeli
-4. **Monitoring:** Application Insights ile hata izleme ve performans metrikleri eklenmeli
-5. **CI/CD (Opsiyonel):** GitHub Actions ile otomatik deployment kurulabilir
+### 5.3. Mevcut Kısıtlamalar ve Geliştirme Alanları
+**Şu anki sistem: Stateless (durumsuz) RAG**
+- ❌ **Conversation history yok** - Her soru bağımsız işleniyor
+- ❌ **System prompt hardcoded** - `SYSTEM_PROMPT.md` kullanılmıyor, değiştirmek için deployment gerekiyor
+- ❌ **Multi-turn conversation desteği yok** - Follow-up questions çalışmıyor
+- ❌ **Session management yok** - User ID, session tracking yok
+- ❌ **Tool calling yok** - Hesaplama, grafik çizme gibi özellikler yok
+
+### 5.4. Sonraki Geliştirme Öncelikleri
+1. **Conversational RAG (FAZ 1):** State storage ekle (Cosmos DB), messages array desteği, system prompt externalization
+2. **Tool Calling (FAZ 2):** Calculator, charting, forecasting, web search araçları
+3. **Monitoring (FAZ 3):** Application Insights detaylı metrikleri, alerting
+4. **CI/CD (FAZ 4):** GitHub Actions otomatik deployment
+5. **Advanced RAG (FAZ 5):** HyDE, re-ranking, query expansion, metadata filtering
+
+**Detaylı plan:** `CURRENT_ARCHITECTURE_ANALYSIS.md` dosyasına bakınız.
 
 ### 5.4. Teknik Notlar
 *   **Hata Yönetimi:** Tüm collector scriptlerinde try-except blokları ve loglama mevcut. Bu yapı korunmalı.

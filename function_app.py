@@ -83,7 +83,11 @@ def query_function(req: func.HttpRequest) -> func.HttpResponse:
     if not question:
         return func.HttpResponse("Soru boş olamaz.", status_code=400)
 
-    client = AzureOpenAI(azure_endpoint=AZURE_OPENAI_ENDPOINT, api_version="2024-02-01")
+    client = AzureOpenAI(
+        azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        api_version="2024-02-01"
+    )
 
     # 1. Soruyu vektörleştir
     q_vector = client.embeddings.create(
@@ -98,11 +102,11 @@ def query_function(req: func.HttpRequest) -> func.HttpResponse:
     )
     results = search_client.search(
         search_text=question,
-        vector_queries=[VectorizedQuery(vector=q_vector, k_nearest_neighbors=5, fields="embedding")],
-        select=["content", "source", "date"],
+        vector_queries=[VectorizedQuery(vector=q_vector, k_nearest_neighbors=5, fields="text_vector")],
+        select=["chunk", "title"],
         top=5
     )
-    context = "\n\n---\n\n".join([r["content"] for r in results])
+    context = "\n\n---\n\n".join([r["chunk"] for r in results])
 
     # 3. GPT ile cevap üret (Generation)
     response = client.chat.completions.create(

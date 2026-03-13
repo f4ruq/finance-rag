@@ -38,7 +38,7 @@ CHAT_DEPLOYMENT             = "gpt-4o"
 
 # ── Azure AI Search ───────────────────────────────────────────────────────────
 SEARCH_SERVICE_ENDPOINT: str = os.environ.get("SEARCH_SERVICE_ENDPOINT", "")
-SEARCH_INDEX_NAME            = "finance-rag-idx"
+SEARCH_INDEX_NAME            = "rag-1773312433567"
 
 # ── Key Vault (opsiyonel — secret'ları doğrudan env var'dan okuyorsanız gerekmez)
 KEY_VAULT_URL: str = os.environ.get("KEY_VAULT_URL", "")
